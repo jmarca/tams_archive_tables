@@ -23,7 +23,8 @@
   },
   "homepage": "https://github.com/jmarca/tams_archive_tables#readme",
   "devDependencies": {
-    "psql_pooler": "github:jmarca/psql_pooler"
+    "psql_pooler": "github:jmarca/psql_pooler",
+    "tap": "^10.3.3"
   },
   "dependencies": {
     "config_okay": "^1.0.0"

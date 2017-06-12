@@ -2,8 +2,8 @@
 
 // jeez.  have to create the stuff and all that
 
-const get_tables = require('../lib/get_tables')
-const get_pool = require('loopshare_companies').get_pool
+const get_tables = require('../lib/get_tables').get_tables
+const get_pool = require('psql_pooler').get_pool
 
 const tap = require('tap')
 
@@ -12,6 +12,34 @@ const rootdir = path.normalize(__dirname)
 
 const config_file = rootdir+'/../test.config.json'
 const config_okay = require('config_okay')
+
+const utils =  require('./utils.js')
+const exec_create_table =utils.exec_create_table
+const drop = utils.drop_tables
+
+const datafile_dir = process.cwd()+'/sql/'
+
+const tablenames = []
+const station_ids = [10001,
+                     10002,
+                     10003,
+                     10004,
+                     10005,
+                     10006,
+                     10007,
+                     113,
+                     3001,
+                     4002,
+                     46,
+                     6001,
+                     6002,
+                     6003,
+                     6004,
+                     6005,
+                     6007,
+                     7001,
+                     7002,
+                     7003]
 
 tap.plan(4)
 
@@ -23,9 +51,9 @@ tap.test('get_trip_request function exists',function (t) {
 let pool
 
 
-const test_query = async (_config) => {
+const test_query = async (_config,pool) => {
 
-    let client
+    let client = await pool.connect()
 
     await tap.test('run query without client',async function(t) {
         let config = Object.assign({},_config)
@@ -40,15 +68,15 @@ const test_query = async (_config) => {
         }
     })
 
-    client = await pool.connect()
-    await client.query('BEGIN')
+
     await tap.test('run with client',async function(t){
         let config = Object.assign({},_config)
         t.plan(4)
         const task = await get_tables(config,client)
         // console.log(task)
         t.ok(task.signaturearchives,'there is a signaturearchives object')
-        t.ok(task.signaturearchives.length=4,'got expected number of tables')
+        t.ok(task.signaturearchives.length=tablenames.length
+             ,'got expected number of tables')
         task.signaturearchives.forEach( table => {
 
             t.ok(table.size>0,'got a non-empty map')
@@ -62,34 +90,63 @@ const test_query = async (_config) => {
 
             return null
         })
-        t.same(fake_table_names,Map.keys(task.signaturearchives)
+        t.same(tablenames,Map.keys(task.signaturearchives)
                ,'got expected tables list')
         t.end()
     })
-
+    await client.release()
     return null
 
 
 }
 
+async function setup_dbs (config){
+
+    let names = ['signaturearchive_1'
+                 ,'signaturearchive_2' ]
+    // ,'signaturearchive_3'
+    // ,'signaturearchive_4'
+    // ]
+    return Promise.all(names.map( (name) =>{
+        let filename = datafile_dir+name+'.sql'
+        return exec_create_table(name,filename,config)
+    })
+                      )
+        .then(listoftables=>{
+            listoftables.forEach(t=>{ tablenames.push(t) })
+            return listoftables
+        })
+
+}
 
 config_okay(config_file)
 
     .then( async (config) => {
         // add the database name for pool
-        config.postgresql.db = config.postgresql.loopshare_db
+        config.postgresql.db = config.postgresql.signatures_db
         pool = await get_pool(config)
 
-        await setup_dbs(config)
+        try {
+            const tables = await setup_dbs(config)
+            // console.log('tables are ', tables)
 
-        await test_query(config)
-        await pool.end()
-        tap.end()
+            await test_query(config,pool)
+
+            const client = await pool.connect()
+            await drop(tables, client)
+            await client.release()
+        }catch(e){
+            console.log('handling error',e)
+        }finally{
+            await pool.end()
+            tap.end()
+        }
     })
-    .catch( (err) =>{
+    .catch(async (err) =>{
         console.log('external catch statement triggered')
         console.log(err)
-        tap.end()
+        await pool.end()
+        await tap.end()
         throw new Error(err)
 
     })
