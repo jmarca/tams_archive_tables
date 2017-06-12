@@ -1,0 +1,6 @@
+node_modules
+test.config.json
+config.json
+.tern-port
+coverage
+.nyc_output

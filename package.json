@@ -1,0 +1,28 @@
+{
+  "name": "tams_archive_tables",
+  "version": "1.0.0",
+  "description": "Probe the contents of archive tables",
+  "main": "index.js",
+  "scripts": {
+    "test": "tap test/**/test*.js --cov"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmarca/tams_archive_tables.git"
+  },
+  "keywords": [
+    "CalVAD",
+    "TAMS",
+    "archive",
+    "signaturearchive"
+  ],
+  "author": "James E. Marca",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/jmarca/tams_archive_tables/issues"
+  },
+  "homepage": "https://github.com/jmarca/tams_archive_tables#readme",
+  "devDependencies": {
+    "psql_pooler": "github:jmarca/psql_pooler"
+  }
+}
