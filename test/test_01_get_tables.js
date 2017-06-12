@@ -41,7 +41,7 @@ const station_ids = [10001,
                      7002,
                      7003]
 
-tap.plan(4)
+tap.plan(3)
 
 tap.test('get_trip_request function exists',function (t) {
     t.plan(1)
@@ -53,7 +53,6 @@ let pool
 
 const test_query = async (_config,pool) => {
 
-    let client = await pool.connect()
 
     await tap.test('run query without client',async function(t) {
         let config = Object.assign({},_config)
@@ -68,45 +67,66 @@ const test_query = async (_config,pool) => {
         }
     })
 
+    let client = await pool.connect()
+    await client.query("BEGIN;")
+    try {
+        let counter = 0
+        await tap.test('run with client',async function(t){
+            let config = Object.assign({},_config)
+            let planned_tests = 4+4*(station_ids.length)+1
 
-    await tap.test('run with client',async function(t){
-        let config = Object.assign({},_config)
-        t.plan(4)
-        const task = await get_tables(config,client)
-        // console.log(task)
-        t.ok(task.signaturearchives,'there is a signaturearchives object')
-        t.ok(task.signaturearchives.length=tablenames.length
-             ,'got expected number of tables')
-        task.signaturearchives.forEach( table => {
+            t.plan(planned_tests)
+            const task = await get_tables(config,client)
+            //console.log(task)
+            t.ok(task.signaturearchives,'there is a signaturearchives object')
+            t.ok(task.signaturearchives.size = station_ids.length
+                 ,'got expected number of map entries')
 
-            t.ok(table.size>0,'got a non-empty map')
+            const archive_map = task.signaturearchives
+            //console.log(archive_map.size)
+            archive_map.forEach( (table_entry,detectorid) => {
+                // console.log(detectorid,table_entry,counter++,planned_tests)
+                // planned_tests -= 2
 
-            table.forEach((value,key)=>{
-                t.ok(station_ids.indexOf(key)>-1,'got a meaningful key')
-                t.same(['max_time','min_time','tablename'],Map.keys(value)
-                       ,'map has expected entries')
+                t.ok(station_ids.indexOf(detectorid)>-1,'got a meaningful key')
+                t.ok(table_entry.size>0,'got a non-empty map')
+                if(detectorid === 6002){
+                    t.is(table_entry.size,2,'should have two db tables for detector 6002')
+                }
+                table_entry.forEach((value,key)=>{
+                   // console.log(detectorid,table_entry,counter++,planned_tests)
+                   //  planned_tests -= 2
+
+                    let value_keys = Object.keys(value )
+
+                    t.same(['mintime','maxtime'],value_keys
+                           ,'map has expected entries')
+                    t.ok(tablenames.indexOf(key)>-1,'got a meaningful key')
+                    return null
+                })
+
                 return null
             })
 
-            return null
+            t.end()
         })
-        t.same(tablenames,Map.keys(task.signaturearchives)
-               ,'got expected tables list')
-        t.end()
-    })
-    await client.release()
+    }catch (e){
+        throw (e)
+    }finally{
+        await client.query("ROLLBACK;")
+        await client.release()
+    }
     return null
-
 
 }
 
 async function setup_dbs (config){
 
     let names = ['signaturearchive_1'
-                 ,'signaturearchive_2' ]
-    // ,'signaturearchive_3'
-    // ,'signaturearchive_4'
-    // ]
+                 ,'signaturearchive_2'
+                 ,'signaturearchive_3'
+                 ,'signaturearchive_4'
+                ]
     return Promise.all(names.map( (name) =>{
         let filename = datafile_dir+name+'.sql'
         return exec_create_table(name,filename,config)
@@ -124,17 +144,23 @@ config_okay(config_file)
     .then( async (config) => {
         // add the database name for pool
         config.postgresql.db = config.postgresql.signatures_db
-        pool = await get_pool(config)
-
         try {
+            pool = await get_pool(config)
+
             const tables = await setup_dbs(config)
             // console.log('tables are ', tables)
 
             await test_query(config,pool)
 
             const client = await pool.connect()
-            await drop(tables, client)
-            await client.release()
+            try{
+                await drop(tables, client)
+            }catch(e){
+                throw e
+            }finally{
+                client.release()
+            }
+
         }catch(e){
             console.log('handling error',e)
         }finally{
@@ -145,8 +171,5 @@ config_okay(config_file)
     .catch(async (err) =>{
         console.log('external catch statement triggered')
         console.log(err)
-        await pool.end()
-        await tap.end()
         throw new Error(err)
-
     })

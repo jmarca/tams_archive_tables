@@ -4,7 +4,8 @@
   "description": "Probe the contents of archive tables",
   "main": "index.js",
   "scripts": {
-    "test": "tap test/**/test*.js --cov"
+    "test": "tap test/**/test*.js --cov",
+    "posttest": "tap --coverage-report=lcov"
   },
   "repository": {
     "type": "git",
