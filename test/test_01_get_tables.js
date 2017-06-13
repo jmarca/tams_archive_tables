@@ -43,9 +43,9 @@ const station_ids = [10001,
 
 tap.plan(3)
 
-tap.test('get_trip_request function exists',function (t) {
+tap.test('get_tables function exists',function (t) {
     t.plan(1)
-    t.ok(get_tables,'insert trip request exists')
+    t.ok(get_tables,'get_tables exists')
     t.end()
 })
 let pool
