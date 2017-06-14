@@ -23,6 +23,7 @@ before_script:
   - export PGPASSWORD="my secret password"
   - psql -c 'create database atestdb;' -U testu -d postgres
   - psql -c 'create schema archive;' -U testu -d atestdb
+  - psql -c 'create schema lookups;' -U testu -d atestdb
   - echo "{\"postgresql\":{\"host\":\"127.0.0.1\",\"port\":5432,\"username\":\"testu\",\"signatures_db\":\"atestdb\"}}" > test.config.json && chmod 0600 test.config.json
 
 after_success:
