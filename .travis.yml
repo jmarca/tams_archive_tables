@@ -8,7 +8,7 @@ node_js:
 
 addons:
   code_climate:
-    repo_token: 34f8e378fa9c2c7058787512aae6a41c0300d1137670810adb4fb10af6fe64b8
+    repo_token: 03efc488f6c9db573bfcb8bbb62c37b4c44cbff16470e982ff9dd5d3eea414e3
 
 notifications:
   email:
