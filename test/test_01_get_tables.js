@@ -2,7 +2,7 @@
 
 // jeez.  have to create the stuff and all that
 
-const get_tables_lib = require('../lib/get_tables')
+const get_tables_lib = require('../.')
 const get_tables = get_tables_lib.get_tables
 const get_tables_for_detector = get_tables_lib.get_tables_for_detector
 
