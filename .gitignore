@@ -4,3 +4,4 @@ config.json
 .tern-port
 coverage
 .nyc_output
+data/cached_tables.json
