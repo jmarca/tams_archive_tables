@@ -1,4 +1,6 @@
-var exec = require('child_process').exec
+const exec = require('child_process').exec
+
+let counter = 0
 
 function exec_create_table(tablename,file,config){
     const psql_opts = config.postgresql
@@ -8,7 +10,7 @@ function exec_create_table(tablename,file,config){
     const port = psql_opts.port
     const db   = psql_opts.db
 
-    const _tablename = 'signaturearchive_'+(Math.floor(10*Math.random()))+'_'+tablename
+    const _tablename = 'signaturearchive_'+(counter++)+'_'+tablename
     const create_statement = `\
     'CREATE TABLE archive.${_tablename} (  \
        id integer NOT NULL,\
@@ -76,11 +78,16 @@ function exec_create_table(tablename,file,config){
 
 }
 
-function drop_tables(tables,client){
-    return Promise.all(tables.map(table =>{
-        return client.query('drop table archive.'+table+' cascade;')
-    })
-                      )
+async function drop_tables(client){
+    await client.query('drop schema if exists archive cascade;')
+    return null
 }
+
+async function create_schema(client){
+    await client.query('create schema archive;')
+    return null
+}
+
 exports.exec_create_table = exec_create_table
 exports.drop_tables = drop_tables
+exports.create_schema=create_schema
