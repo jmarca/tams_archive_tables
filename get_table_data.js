@@ -32,7 +32,7 @@ config_okay(config_file)
         try {
             pool = await get_pool(config)
             client = await pool.connect()
-            const task = await get_tables(config,client)
+            const task = await get_tables(config,client,true)
             console.log('done')
         }catch(e){
             console.log('handling error',e)
