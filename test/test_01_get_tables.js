@@ -19,6 +19,7 @@ const config_okay = require('config_okay')
 const utils =  require('./utils.js')
 const exec_create_table =utils.exec_create_table
 const drop = utils.drop_tables
+const create_schema = utils.create_schema
 
 const datafile_dir = process.cwd()+'/sql/'
 
@@ -61,7 +62,7 @@ const test_query = async (_config,pool) => {
         let config = Object.assign({},_config)
         t.plan(1)
         try{
-            await get_tables(config)
+            await get_tables(config,null,1)
             t.fail('should not succeed without client')
             t.end()
         }catch (query_error){
@@ -300,15 +301,23 @@ config_okay(config_file)
         config.postgresql.db = config.postgresql.signatures_db
         try {
             pool = await get_pool(config)
-
+            let  client = await pool.connect()
+            try{
+                await drop(client)
+                await create_schema(client)
+            }catch(e){
+                console.log('problem with drop create, ',e)
+            }finally {
+                await client.release()
+            }
             const tables = await setup_dbs(config)
             // console.log('tables are ', tables)
 
             await test_query(config,pool)
 
-            const client = await pool.connect()
+            client = await pool.connect()
             try{
-                await drop(tables, client)
+                await drop(client)
             }catch(e){
                 throw e
             }finally{
