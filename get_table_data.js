@@ -2,7 +2,6 @@ const mylib = require('.')
 const get_tables = mylib.get_tables
 const get_pool = require('psql_pooler').get_pool
 
-const rw = require("rw").dash
 const commander = require("commander")
 
 const path    = require('path')
